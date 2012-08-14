@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
 
 namespace Vub.Etro.IO
 {
@@ -130,6 +129,7 @@ namespace Vub.Etro.IO
             int n = _reader.Read(data, 0, 512);
             Header.SetHeader(data);
 
+#if DEBUG
             Console.WriteLine("\tFirstWord: {0:X}", Header.FirstWord);
             Console.WriteLine("\tNumber of 3D points: " + Header.NumberOfPoints);
             Console.WriteLine("\tAnalog channels: " + Header.AnalogChannels);
@@ -140,6 +140,7 @@ namespace Vub.Etro.IO
             Console.WriteLine("\tData start: " + Header.DataStart);
             Console.WriteLine("\tAnalog samples per frame: " + Header.AnalogSamplesPerFrame);
             Console.WriteLine("\tFrame rate: " + Header.FrameRate);
+#endif
         }
 
         private void ReadParameters()
@@ -250,9 +251,6 @@ namespace Vub.Etro.IO
 
             data = _pointScale < 0 ? ReadFloatData() : ReadIntData();
 
-            
-            
-            Console.WriteLine(_currentFrame);            
             _currentFrame++;
             return data;
         }
