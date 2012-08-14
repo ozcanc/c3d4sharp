@@ -1,4 +1,13 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------------
+// C3dWriter.cs
+//
+// Writes data to C3D files 
+//
+// ETRO, Vrije Universiteit Brussel
+// Copyright (C) Lubos Omelina. All rights reserved.
+//-----------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
