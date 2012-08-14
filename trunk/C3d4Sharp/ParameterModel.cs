@@ -17,6 +17,8 @@ using System.IO;
 
 namespace Vub.Etro.IO
 {
+    #region 3D point representation
+
     public struct Vector3
     {
         public Vector3(float x, float y, float z) {
@@ -27,6 +29,8 @@ namespace Vub.Etro.IO
 
         public float X, Y, Z;
     }
+
+    #endregion
 
     #region ParameterBase
 
