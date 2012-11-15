@@ -43,13 +43,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Sample.c3d" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\C3d4Sharp\C3d4Sharp.csproj">
       <Project>{3CBDF7BA-6600-4CE8-A195-5D5952B0906D}</Project>
       <Name>C3d4Sharp</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Sample.c3d" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

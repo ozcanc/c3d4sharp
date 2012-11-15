@@ -26,19 +26,25 @@ namespace SimpleReader
 
                 for (int i = 0; i < reader.GetParameter<Int16>("POINT:FRAMES"); i++)
                 {
-                    // returns array of all points, it is necessary to call this method in each cycle
-                    Vector3[] array = reader.ReadFrame(); 
+                    // returns an array of all points, it is necessary to call this method in each cycle
+                    Vector3[] array = reader.ReadFrame();
 
-                    // we can ask for specific point
-                    Vector3 spine = reader["Spine"];
+                    // we can ask for specific point - you can check labels in reader.Labels
+                    Vector3 spine = array[1];
  
                     // get analog data for this frame
-                    float[,] analogData = reader.AnalogData;
+                    float value = reader.AnalogData["Fx1", 0 /* from 0 to reader.AnalogChannels*/];
+                    // OR 
+                    value = reader.AnalogData[0, 0];
+                    
+                    // OR
+                    float [,] analogData = reader.AnalogData.Data;
+
 
                     Console.WriteLine("Frame " + i + ": Spine.X " + spine.X + ",  Spine.Y " + spine.Y + ": Spine.Z " + spine.Z);
                 }
 
-                // Don't forget to close everithing 
+                // Don't forget to close the reader
                 // - it updates the frames count information in the c3d file header and parameters section
                 reader.Close();
             }
