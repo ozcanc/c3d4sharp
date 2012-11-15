@@ -44,13 +44,22 @@ namespace Vub.Etro.IO
 
         private List<string> _pointsLabels;
         private Dictionary<string,int> _pointsLabelsToId;
+        internal List<string> _analogLabels;
+        internal Dictionary<string, int> _analogLabelsToId;
+            
+
         public IList<string> Labels { get { return _pointsLabels.AsReadOnly(); } }
+        public IList<string> AnalogLabels { get { return _analogLabels.AsReadOnly(); } }
 
         private int _currentFrame = 0;
         public int CurrentFrame { get { return _currentFrame; } }
 
-        private float[,] _analogData = null;
-        public float[,] AnalogData { get {return _analogData;} }
+        //private float[,] _analogData = null;
+        //public float[,] AnalogData { get {return _analogData;} }
+
+        private AnalogDataArray _analogData = null;
+        public AnalogDataArray AnalogData { get {return _analogData;} }
+        public int AnalogChannels { get { return (int)(_analogRate / _pointRate); } }
 
         public Vector3[] _points = null;
         public Vector3[] Points { get { return _points; } }
@@ -73,7 +82,8 @@ namespace Vub.Etro.IO
             _pointsLabels = new List<string>();
             _pointsLabelsToId = new Dictionary<string, int>();
             _allParameters = new HashSet<Parameter>();
-
+            _analogLabels = new List<string>();
+            _analogLabelsToId = new Dictionary<string, int>();
         }
 
         public bool Open(string c3dFile)
@@ -119,6 +129,16 @@ namespace Vub.Etro.IO
             _analogScale = GetParameter<float[]>("ANALOG:SCALE");
             _analogGenScale = GetParameter<float>("ANALOG:GEN_SCALE");
             _analogZeroOffset = GetParameter<Int16[]>("ANALOG:OFFSET");
+            
+            string[] analogLabels = GetParameter<string[]>("ANALOG:LABELS");
+            for (int i = 0; i < analogLabels.Length; i++)
+            {
+                string label = analogLabels[i].TrimEnd(' ');
+                _analogLabelsToId.Add(label, i);
+                _analogLabels.Insert(i, label);
+            }
+            
+
         }
 
 
@@ -273,7 +293,21 @@ namespace Vub.Etro.IO
 
 
             // Read Analog data
-            // TODO (works if there is no analog data)
+            int samplesPerFrame = (int)(_analogRate / _pointRate);
+            
+            float [,] allData = new float[_analogUsed, samplesPerFrame];
+            for (int rate = 0; rate < samplesPerFrame; rate++)
+            {
+                for (int variable = 0; variable < _analogUsed; variable++)
+                {
+                    float data = _reader.ReadSingle();
+                    //real world value = (data value - zero offset) * channel scale * general scale
+                    allData[variable, rate] =
+                        (data - ((_analogZeroOffset != null && _analogZeroOffset.Length > 0) ? _analogZeroOffset[variable] : 0)) * _analogGenScale * (_analogScale != null && _analogScale.Length > 0 ? _analogScale[variable] : 1);
+                }
+            }
+            _analogData = new AnalogDataArray(_analogLabels, _analogLabelsToId, allData);
+
             return _points;
         }
 
@@ -295,16 +329,18 @@ namespace Vub.Etro.IO
 
             // reading of analog data
             int samplesPerFrame = (int)(_analogRate / _pointRate);
-            _analogData = new float[samplesPerFrame, _analogUsed];
+            float [,] allData = new float[_analogUsed, samplesPerFrame];
             for (int rate = 0; rate < samplesPerFrame; rate++)
             {
-                for (int channel = 0; channel < _analogUsed; channel++)
+                for (int variable = 0; variable < _analogUsed; variable++)
                 {
                     float data = _reader.ReadInt16();
-                    _analogData[rate, channel] =
-                        (data - ((_analogZeroOffset != null && _analogZeroOffset.Length > 0) ? _analogZeroOffset[channel] : 0)) * _analogGenScale * (_analogScale != null && _analogScale.Length > 0 ? _analogScale[channel] : 1); 
+                    // real world value = (data value - zero offset) * channel scale * general scale
+                    allData[variable, rate] =
+                        (data - ((_analogZeroOffset != null && _analogZeroOffset.Length > 0) ? _analogZeroOffset[variable] : 0)) * _analogGenScale * (_analogScale != null && _analogScale.Length > 0 ? _analogScale[variable] : 1); 
                 }
             }
+            _analogData = new AnalogDataArray(_analogLabels, _analogLabelsToId, allData);
 
             return _points;
         }
@@ -348,6 +384,87 @@ namespace Vub.Etro.IO
             return true;
         }
 
+    }
+
+    public class AnalogDataArray
+    {
+
+        private List<string> _analogLabels { get; set; }
+        private Dictionary<string, int> _analogLabelsToId { get; set; }
+        private float[,] _analogData = null;
+        public float[,] Data { get { return _analogData; } }
+        public IList<string> Labels { get { return _analogLabels.AsReadOnly(); } }
+
+        internal AnalogDataArray(List<string> analogLabels, Dictionary<string, int> analogLabelsToId, float[,] analogData)
+        {
+            _analogLabels = analogLabels;
+            _analogLabelsToId = analogLabelsToId;
+            _analogData = analogData;
+        }
+
+        public float this[int key, int channel]
+        {
+            get
+            {
+                if (_analogData == null)
+                {
+                    throw new ApplicationException("You must open file and read freame first");
+                }
+                else if (key < 0 || key >= _analogData.Length)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+                return _analogData[key, channel];
+            }
+        }
+
+        public float this[int key]
+        {
+            get
+            {
+                if (_analogData == null)
+                {
+                    throw new ApplicationException("You must open file and read freame first");
+                }
+                else if (key < 0 || key >= _analogData.Length)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+                return _analogData[key, 0];
+            }
+        }
+
+        public float this[string key, int channel]
+        {
+            get
+            {
+                if (_analogLabels == null)
+                {
+                    throw new ApplicationException("You must open file and read freame first");
+                }
+                if (!_analogLabelsToId.ContainsKey(key))
+                {
+                    throw new ApplicationException("Analog data label " + key + " doesn't exist in the 3D point data section");
+                }
+                return _analogData[_analogLabelsToId[key], channel];
+            }
+        }
+
+        public float this[string key]
+        {
+            get
+            {
+                if (_analogLabels == null)
+                {
+                    throw new ApplicationException("You must open file and read freame first");
+                }
+                if (!_analogLabelsToId.ContainsKey(key))
+                {
+                    throw new ApplicationException("Analog data label " + key + " doesn't exist in the 3D point data section");
+                }
+                return _analogData[_analogLabelsToId[key], 0];
+            }
+        }
     }
 }
 
