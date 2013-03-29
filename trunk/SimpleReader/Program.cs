@@ -28,7 +28,7 @@ namespace SimpleReader
                 {
                     // returns an array of all points, it is necessary to call this method in each cycle
                     Vector3[] array = reader.ReadFrame();
-
+                    //Vector3 e = reader["Spine"];
                     // we can ask for specific point - you can check labels in reader.Labels
                     Vector3 spine = array[1];
  
