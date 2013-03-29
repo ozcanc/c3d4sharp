@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C3d4Sharp", "C3d4Sharp\C3d4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleReader", "SimpleReader\SimpleReader.csproj", "{F5CA6574-860F-41BA-93EF-2DB10BB97AD4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleWriter", "SimpleWriter\SimpleWriter.csproj", "{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{F5CA6574-860F-41BA-93EF-2DB10BB97AD4}.Release|Mixed Platforms.Build.0 = Release|x86
 		{F5CA6574-860F-41BA-93EF-2DB10BB97AD4}.Release|x86.ActiveCfg = Release|x86
 		{F5CA6574-860F-41BA-93EF-2DB10BB97AD4}.Release|x86.Build.0 = Release|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Debug|x86.ActiveCfg = Debug|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Debug|x86.Build.0 = Debug|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Release|Any CPU.ActiveCfg = Release|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Release|Mixed Platforms.Build.0 = Release|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Release|x86.ActiveCfg = Release|x86
+		{C23DF39D-E97C-473D-9E7E-E3FEBD3CF491}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
