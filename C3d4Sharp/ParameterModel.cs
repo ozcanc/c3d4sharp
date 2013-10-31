@@ -50,6 +50,17 @@ namespace Vub.Etro.IO
 
         public sbyte Id { get; set; }
 
+        private long _offsetInFile = -1;
+        internal long OffsetInFile { 
+            get { return _offsetInFile; } 
+            set {
+                if (_offsetInFile == -1)
+                    _offsetInFile = value;
+                else
+                    throw new ApplicationException("FileOffset has been set already for parameter "+ Name);
+            }
+        }
+
         protected abstract Int16 GetContentLength();
         protected abstract void WriteContent(BinaryWriter writer);
 
@@ -173,7 +184,7 @@ namespace Vub.Etro.IO
         private byte[] _vectorData;
         private sbyte _paramType;
         private int _length;
-
+            
         public bool IsScalar { get; set; }
 
         private int _C3DParameterSize = 0;

@@ -67,6 +67,12 @@ namespace Vub.Etro.IO
         private int _pointFrames = 0;
         public int FramesCount { get { return _pointFrames; } }
 
+        public int NumberOfPointsInFrame { 
+            get { return _pointsNumber; }
+            set { _pointsNumber = value; }
+        }
+
+
         private C3dHeader _header = null;
         public C3dHeader Header { get { return _header; } }
 
@@ -172,7 +178,6 @@ namespace Vub.Etro.IO
             int nextItem;
             do
             {
-
                 sbyte nameLen = ParameterModel.ReadNameLength(_reader);
                 bool isLocked = nameLen < 0;
                 sbyte id = ParameterModel.ReadGroupID(_reader);
@@ -263,15 +268,16 @@ namespace Vub.Etro.IO
                 throw new ApplicationException("The C3d file is not open. Open the file before reading.");
             }
 
-            if (_currentFrame >= _pointFrames)
-            {
-                _reader.BaseStream.Seek(_dataStart, 0);
-                _currentFrame = 0;
-            }
+            //if (_currentFrame >= _pointFrames)
+            //{
+            //    _reader.BaseStream.Seek(_dataStart, 0);
+            //    _currentFrame = 0;
+            //}
 
             data = _pointScale < 0 ? ReadFloatData() : ReadIntData();
 
             _currentFrame++;
+            Console.WriteLine(_currentFrame);
             return data;
         }
 

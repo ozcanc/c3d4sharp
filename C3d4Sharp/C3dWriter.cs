@@ -18,13 +18,12 @@ namespace Vub.Etro.IO
     public class C3dWriter
     {
         private string _c3dFile;
-        private FileStream _fs;
-        private BinaryWriter _writer;
+        private FileStream _fs = null;
+        private BinaryWriter _writer = null;
         private Dictionary<string, ParameterGroup> _nameToGroups;
         private Dictionary<int, ParameterGroup> _idToGroups;
         private HashSet<Parameter> _allParameters;
-
-
+        
         private int _dataStartOffset;
         private int _pointFramesOffset;
         
@@ -63,6 +62,12 @@ namespace Vub.Etro.IO
 
             SetDefaultParametrs();
         }
+        
+        ~C3dWriter() {
+            if (_fs != null) {
+                Close();
+            }
+        }
 
 
         public bool Open(string c3dFile) {
@@ -73,7 +78,6 @@ namespace Vub.Etro.IO
             {
                 _fs = new FileStream(_c3dFile, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 _writer = new BinaryWriter(_fs);
-            
                 WriteHeader();
                 WriteParameters();
 
@@ -91,8 +95,8 @@ namespace Vub.Etro.IO
         {
             // write number of frames
             long position = _writer.BaseStream.Position;
-            _writer.Seek(_pointFramesOffset, 0);
             Parameter p = _nameToGroups["POINT"].GetParameter("FRAMES");
+            _writer.Seek((int)p.OffsetInFile/*_pointFramesOffset*/, 0);
             p.SetData<Int16>((Int16)_header.LastSampleNumber);
             p.WriteTo(_writer);
             
@@ -107,7 +111,18 @@ namespace Vub.Etro.IO
             _writer = null;
             _fs.Close();
             _fs = null;
+
             return true;
+        }
+
+        public void UpdateParameter(Parameter p)
+        {
+            long position = _writer.BaseStream.Position;
+
+            _writer.Seek((int)p.OffsetInFile, 0);
+            p.WriteTo(_writer);
+
+            _writer.Seek((int)position, 0);
         }
 
         private void WriteParameters()
@@ -132,10 +147,12 @@ namespace Vub.Etro.IO
                  ) / ParameterModel.BLOCK_SIZE)
                  + 2; // 1 because we are counting from zero and 1 because we want to point on to the next block
             long position = _writer.BaseStream.Position;
-            _writer.Seek(_dataStartOffset,0);
+            
             Parameter p = _nameToGroups["POINT"].GetParameter("DATA_START");
-            p.SetData<Int16>((Int16)dataStart);
+            p.SetData<Int16>((Int16)dataStart); 
+            _writer.Seek((int)p.OffsetInFile/*_dataStartOffset*/, 0);
             p.WriteTo(_writer);
+            
             _writer.Seek((int)position, 0);
 
 
@@ -156,15 +173,16 @@ namespace Vub.Etro.IO
             foreach (Parameter p in grp.Parameters)
             {
                 p.Id = (sbyte)-grp.Id;// parameterId++;
-                
+
                 // ugly ugly ugly 
-                if (grp.Name == "POINT"){
-                    if ( p.Name == "DATA_START") {
-                        _dataStartOffset = (int)_writer.BaseStream.Position;
-                    } else if(p.Name == "FRAMES"){
-                        _pointFramesOffset = (int)_writer.BaseStream.Position;
-                    }
-                }
+                //if (grp.Name == "POINT"){
+                //    if ( p.Name == "DATA_START") {
+                //        _dataStartOffset = (int)_writer.BaseStream.Position;
+                //    } else if(p.Name == "FRAMES"){
+                //        _pointFramesOffset = (int)_writer.BaseStream.Position;
+                //    }
+                //}
+                p.OffsetInFile = _writer.BaseStream.Position;
                 p.WriteTo(_writer);
             }
         }
@@ -215,11 +233,18 @@ namespace Vub.Etro.IO
 
             if (!_nameToGroups.ContainsKey(elements[0]))
             {
-                ParameterGroup group = new ParameterGroup();
-                group.Id = _nextGroupId--;
-                group.Name = elements[0];
-                _nameToGroups.Add(group.Name, group);
-                _idToGroups.Add(group.Id, group);
+                if (_fs == null)
+                {
+                    ParameterGroup group = new ParameterGroup();
+                    group.Id = _nextGroupId--;
+                    group.Name = elements[0];
+                    _nameToGroups.Add(group.Name, group);
+                    _idToGroups.Add(group.Id, group);
+                }
+                else {
+                    throw new ApplicationException("Cannot create a parameter group " + elements[0] + " after file was open.");
+                }
+
             }
 
             ParameterGroup grp = _nameToGroups[elements[0]];
@@ -231,10 +256,20 @@ namespace Vub.Etro.IO
             p.SetData<T>(parameterValue);
             
             if (!grp.Parameters.Contains(p))
-            { 
-                grp.Parameters.Add(p);
+            {
+                if (_fs == null)
+                {
+                    grp.Parameters.Add(p);
+                }
+                else {
+                    throw new ApplicationException("Cannot create a parameter " + elements[0] + " after file was open.");
+                }
             }
-        
+
+            // if file is open and we are modifieng an existig an parameter - update changes.
+            if (_fs != null && p.OffsetInFile > 0) {
+                UpdateParameter(p);
+            }
         }
 
         public void WriteFloatFrame(Vector3[] data)
