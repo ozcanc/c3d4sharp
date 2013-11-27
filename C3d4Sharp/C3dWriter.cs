@@ -94,14 +94,11 @@ namespace Vub.Etro.IO
         public bool Close()
         {
             // write number of frames
-            long position = _writer.BaseStream.Position;
-            Parameter p = _nameToGroups["POINT"].GetParameter("FRAMES");
-            _writer.Seek((int)p.OffsetInFile/*_pointFramesOffset*/, 0);
-            p.SetData<Int16>((Int16)_header.LastSampleNumber);
-            p.WriteTo(_writer);
+            SetParameter<Int16>("POINT:FRAMES", (Int16)_header.LastSampleNumber);
             
-            // update header data start
-            p = _nameToGroups["POINT"].GetParameter("DATA_START");
+            // update header (data start together with number of frames)
+            long position = _writer.BaseStream.Position;
+            Parameter p = _nameToGroups["POINT"].GetParameter("DATA_START");
             _header.DataStart = (short)p.GetData<Int16>();
             _writer.Seek(0,0);
             _writer.Write(_header.GetRawData());
@@ -146,13 +143,14 @@ namespace Vub.Etro.IO
                 + 5  // size of the last group
                  ) / ParameterModel.BLOCK_SIZE)
                  + 2; // 1 because we are counting from zero and 1 because we want to point on to the next block
+
+
+            SetParameter<Int16>("POINT:DATA_START", (Int16)dataStart);
+            
             long position = _writer.BaseStream.Position;
-            
-            Parameter p = _nameToGroups["POINT"].GetParameter("DATA_START");
-            p.SetData<Int16>((Int16)dataStart); 
-            _writer.Seek((int)p.OffsetInFile/*_dataStartOffset*/, 0);
-            p.WriteTo(_writer);
-            
+            _writer.Seek((int)512, 0);
+            parameters[2] = (byte)(dataStart-2); // number of blocks with parameters is one less than the number of the data starting block without first block
+            _writer.Write(parameters, 0, 4);        
             _writer.Seek((int)position, 0);
 
 
@@ -164,24 +162,13 @@ namespace Vub.Etro.IO
             lastTag.WriteTo(_writer,true);
 
             _writer.Write(new byte[(dataStart-1) * 512 - _writer.BaseStream.Position]);
-
         }
 
         private void WriteParametersOfGroup(ParameterGroup grp)
         {
-            //sbyte parameterId = 1;
             foreach (Parameter p in grp.Parameters)
             {
-                p.Id = (sbyte)-grp.Id;// parameterId++;
-
-                // ugly ugly ugly 
-                //if (grp.Name == "POINT"){
-                //    if ( p.Name == "DATA_START") {
-                //        _dataStartOffset = (int)_writer.BaseStream.Position;
-                //    } else if(p.Name == "FRAMES"){
-                //        _pointFramesOffset = (int)_writer.BaseStream.Position;
-                //    }
-                //}
+                p.Id = (sbyte)-grp.Id;
                 p.OffsetInFile = _writer.BaseStream.Position;
                 p.WriteTo(_writer);
             }
