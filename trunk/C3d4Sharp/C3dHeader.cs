@@ -30,6 +30,7 @@ namespace Vub.Etro.IO
             AnalogSamplesPerFrame = 0;
             AnalogChannels = 0;
             ScaleFactor = -1f;
+            Support4CharEventLabels = true;
         }
 
         public Int16 FirstWord { get { return BitConverter.ToInt16(_data, 0); }                 set { Array.Copy(BitConverter.GetBytes(value), 0, _data,0, sizeof(Int16)); } }
@@ -44,7 +45,9 @@ namespace Vub.Etro.IO
         public Int16 DataStart { get { return BitConverter.ToInt16(_data, 16); }                set { Array.Copy(BitConverter.GetBytes(value), 0, _data, 16, sizeof(Int16)); } }
         public Int16 AnalogSamplesPerFrame { get { return BitConverter.ToInt16(_data, 18); }    set { Array.Copy(BitConverter.GetBytes(value), 0, _data, 18, sizeof(Int16)); } }
         public float FrameRate { get { return BitConverter.ToSingle(_data, 20); }               set { Array.Copy(BitConverter.GetBytes(value), 0, _data, 20, sizeof(float)); } }
-        
+
+        public bool Support4CharEventLabels { get { return BitConverter.ToInt16(_data, 149*2) == 12345; } set { Array.Copy(BitConverter.GetBytes(value == true? 12345:0), 0, _data, 149*2, sizeof(Int16)); } }
+
         internal void SetHeader(byte[] headerData)
         {
             Array.Copy(headerData, _data, 512);
