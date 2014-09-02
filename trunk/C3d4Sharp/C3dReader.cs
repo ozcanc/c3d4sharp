@@ -15,6 +15,10 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
+#if SKIP_VECTOR3
+    using Microsoft.Xna.Framework;
+#endif
+
 namespace Vub.Etro.IO
 {
     public class C3dReader

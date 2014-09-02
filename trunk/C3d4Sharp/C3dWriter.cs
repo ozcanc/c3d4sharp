@@ -39,11 +39,13 @@ namespace Vub.Etro.IO
 
         public int FramesCount { get { return _header.LastSampleNumber; } }
 
-        public Int16 PointsCount { 
-            get { return _header.NumberOfPoints; } 
-            set { 
-                _header.NumberOfPoints = value; 
-            } 
+        public Int16 PointsCount
+        {
+            get { return _header.NumberOfPoints; }
+            set
+            {
+                _header.NumberOfPoints = value;
+            }
         }
 
         private C3dHeader _header = null;
@@ -70,8 +72,9 @@ namespace Vub.Etro.IO
         }
 
 
-        public bool Open(string c3dFile) {
-            
+        public bool Open(string c3dFile)
+        {
+
             _c3dFile = c3dFile;
             _header.LastSampleNumber = 0;
             try
@@ -91,16 +94,21 @@ namespace Vub.Etro.IO
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public bool Close()
         {
+            if (_fs == null) {
+                return false;
+            }
+            
             // write number of frames
             SetParameter<Int16>("POINT:FRAMES", (Int16)_header.LastSampleNumber);
-            
+
             // update header (data start together with number of frames)
             long position = _writer.BaseStream.Position;
             Parameter p = _nameToGroups["POINT"].GetParameter("DATA_START");
             _header.DataStart = (short)p.GetData<Int16>();
-            _writer.Seek(0,0);
+            _writer.Seek(0, 0);
             _writer.Write(_header.GetRawData());
 
             _writer.Seek((int)position, 0); // to be sure, put pointer to the end
@@ -127,14 +135,14 @@ namespace Vub.Etro.IO
             byte[] parameters = new byte[4] { 0x01, 0x50, 0x02, 0x54 };
             _writer.Write(parameters, 0, 4);
             _writePos += 4;
-            
+
 
             foreach (int id in _idToGroups.Keys)
             {
                 ParameterGroup grp = _idToGroups[id];
 
                 grp.WriteTo(_writer);
-                
+
                 WriteParametersOfGroup(grp);
             }
 
@@ -146,11 +154,11 @@ namespace Vub.Etro.IO
 
 
             SetParameter<Int16>("POINT:DATA_START", (Int16)dataStart);
-            
+
             long position = _writer.BaseStream.Position;
             _writer.Seek((int)512, 0);
-            parameters[2] = (byte)(dataStart-2); // number of blocks with parameters is one less than the number of the data starting block without first block
-            _writer.Write(parameters, 0, 4);        
+            parameters[2] = (byte)(dataStart - 2); // number of blocks with parameters is one less than the number of the data starting block without first block
+            _writer.Write(parameters, 0, 4);
             _writer.Seek((int)position, 0);
 
 
@@ -159,9 +167,9 @@ namespace Vub.Etro.IO
             lastTag.Id = 0;
             lastTag.Name = "";
             lastTag.Description = "";
-            lastTag.WriteTo(_writer,true);
+            lastTag.WriteTo(_writer, true);
 
-            _writer.Write(new byte[(dataStart-1) * 512 - _writer.BaseStream.Position]);
+            _writer.Write(new byte[(dataStart - 1) * 512 - _writer.BaseStream.Position]);
         }
 
         private void WriteParametersOfGroup(ParameterGroup grp)
@@ -182,7 +190,7 @@ namespace Vub.Etro.IO
 
         private void SetDefaultParametrs()
         {
-            SetParameter<Int16>("POINT:DATA_START",(Int16)2);
+            SetParameter<Int16>("POINT:DATA_START", (Int16)2);
 
             _header.NumberOfPoints = 21;
             SetParameter<Int16>("POINT:USED", (Int16)_header.NumberOfPoints);
@@ -198,12 +206,12 @@ namespace Vub.Etro.IO
 
             _header.AnalogSamplesPerFrame = 0;
             SetParameter<float>("ANALOG:RATE", _header.AnalogSamplesPerFrame);
-            
+
             _header.AnalogChannels = 0;
             SetParameter<Int16>("ANALOG:USED", (Int16)_header.AnalogChannels);
 
             SetParameter<float[]>("ANALOG:SCALE", new float[] { });
-            
+
             SetParameter<float>("ANALOG:GEN_SCALE", 1);
 
             SetParameter<Int16[]>("ANALOG:OFFSET", new Int16[] { });
@@ -228,7 +236,8 @@ namespace Vub.Etro.IO
                     _nameToGroups.Add(group.Name, group);
                     _idToGroups.Add(group.Id, group);
                 }
-                else {
+                else
+                {
                     throw new ApplicationException("Cannot create a parameter group " + elements[0] + " after file was open.");
                 }
 
@@ -241,20 +250,22 @@ namespace Vub.Etro.IO
 
             p.Name = elements[1];
             p.SetData<T>(parameterValue);
-            
+
             if (!grp.Parameters.Contains(p))
             {
                 if (_fs == null)
                 {
                     grp.Parameters.Add(p);
                 }
-                else {
+                else
+                {
                     throw new ApplicationException("Cannot create a parameter " + elements[0] + " after file was open.");
                 }
             }
 
             // if file is open and we are modifieng an existig an parameter - update changes.
-            if (_fs != null && p.OffsetInFile > 0) {
+            if (_fs != null && p.OffsetInFile > 0)
+            {
                 UpdateParameter(p);
             }
         }
@@ -274,9 +285,9 @@ namespace Vub.Etro.IO
             }
         }
 
-        
-        
-        public void WriteIntFrame(Vector3 [] data) 
+
+
+        public void WriteIntFrame(Vector3[] data)
         {
             _header.LastSampleNumber++;
             for (int i = 0; i < data.Length; i++)
@@ -287,7 +298,7 @@ namespace Vub.Etro.IO
 
                 // TODO
                 _writer.Write((Int16)0);
-                
+
             }
         }
 
@@ -299,7 +310,8 @@ namespace Vub.Etro.IO
                 "Number of channels in data has to be the same as it is declared in header and parameters' section");
             }
 
-            for (int i = 0; i < data_channels.Length; i++) {
+            for (int i = 0; i < data_channels.Length; i++)
+            {
                 _writer.Write(data_channels[i]);
             }
         }

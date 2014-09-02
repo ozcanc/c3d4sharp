@@ -17,11 +17,15 @@ using System.IO;
 
 namespace Vub.Etro.IO
 {
+
+#if !SKIP_VECTOR3
     #region 3D point representation
+
 
     public struct Vector3
     {
-        public Vector3(float x, float y, float z) {
+        public Vector3(float x, float y, float z)
+        {
             this.X = x;
             this.Y = y;
             this.Z = z;
@@ -31,6 +35,7 @@ namespace Vub.Etro.IO
     }
 
     #endregion
+#endif
 
     #region ParameterBase
 
@@ -38,7 +43,7 @@ namespace Vub.Etro.IO
     {
         public const int BLOCK_SIZE = 512;
 
-        public ParameterModel() 
+        public ParameterModel()
         {
             Name = "";
             Description = "";
@@ -51,32 +56,35 @@ namespace Vub.Etro.IO
         public sbyte Id { get; set; }
 
         private long _offsetInFile = -1;
-        internal long OffsetInFile { 
-            get { return _offsetInFile; } 
-            set {
+        internal long OffsetInFile
+        {
+            get { return _offsetInFile; }
+            set
+            {
                 if (_offsetInFile == -1)
                     _offsetInFile = value;
                 else
-                    throw new ApplicationException("FileOffset has been set already for parameter "+ Name);
+                    throw new ApplicationException("FileOffset has been set already for parameter " + Name);
             }
         }
 
         protected abstract Int16 GetContentLength();
         protected abstract void WriteContent(BinaryWriter writer);
 
-        public void WriteTo(BinaryWriter writer, bool isLast = false) {
-            
+        public void WriteTo(BinaryWriter writer, bool isLast = false)
+        {
+
             writer.Write((sbyte)Name.Length);
             writer.Write((sbyte)Id);
             writer.Write(Name.ToCharArray());//  string name = ParameterModel.ReadName(_reader, Math.Abs(nameLen));
 
             // compute offset of the next item
-            Int16 nextItem = (Int16) (isLast ?
+            Int16 nextItem = (Int16)(isLast ?
                 0 : (Description.Length
                                             + 2 // next item number 
                                             + 1 // desc length number
                                             + GetContentLength()));
-            
+
 
             writer.Write(nextItem);
             WriteContent(writer);
@@ -144,7 +152,7 @@ namespace Vub.Etro.IO
             get { return _parameters; }
         }
 
-        public bool HasParameter(string name) 
+        public bool HasParameter(string name)
         {
             foreach (Parameter p in _parameters)
             {
@@ -168,7 +176,7 @@ namespace Vub.Etro.IO
             return null;
         }
 
-        
+
         protected override Int16 GetContentLength() { return 0; } // ParameterGroup doesn't have content (NOTE: Parameters are children, not content)
 
         protected override void WriteContent(BinaryWriter writer) { }
@@ -184,7 +192,7 @@ namespace Vub.Etro.IO
         private byte[] _vectorData;
         private sbyte _paramType;
         private int _length;
-            
+
         public bool IsScalar { get; set; }
 
         private int _C3DParameterSize = 0;
@@ -217,8 +225,9 @@ namespace Vub.Etro.IO
             _C3DParameterSize = (int)(reader.BaseStream.Position - position);
         }
 
-        public Parameter() { 
-        
+        public Parameter()
+        {
+
         }
 
         private void ReadMatrix(BinaryReader reader, Type t, int dimensions)
@@ -294,7 +303,7 @@ namespace Vub.Etro.IO
                 _dimensions = new int[] { };
                 _paramType = 1;
                 _vectorData = BitConverter.GetBytes((byte)(object)data);
-                _length = 1; 
+                _length = 1;
                 IsScalar = true;
             }
             else if (typeof(T) == typeof(Int16))
@@ -329,27 +338,27 @@ namespace Vub.Etro.IO
             {
                 int count = ((string[])(object)data).Length;
                 int maxLen = 0;
-                foreach (string s in ((string[])(object)data)) 
+                foreach (string s in ((string[])(object)data))
                 {
                     maxLen = Math.Max(s.Length, maxLen);
                 }
                 _dimensions = new int[] { maxLen, count };
                 _paramType = -1;
                 _vectorData = new byte[count * maxLen];
-              
-                
+
+
                 // in C# there is really no other method for initialising arrays to a non-default value (without creating temporary objects)
                 // this is fastest way, see this -> http://www.dotnetperls.com/initialize-array
                 // but yes, it's ugly, indeed
-                for (int i = 0; i < _vectorData.Length; i++) _vectorData[i] = 32; 
+                for (int i = 0; i < _vectorData.Length; i++) _vectorData[i] = 32;
 
-              
-  
+
+
                 _length = _vectorData.Length; // it is the same length as it is in string because ASCII encoding
                 for (int i = 0; i < count; i++)
                 {
                     string s = ((string[])(object)data)[i];
-                    Encoding.ASCII.GetBytes(s, 0, s.Length, _vectorData,i*maxLen);
+                    Encoding.ASCII.GetBytes(s, 0, s.Length, _vectorData, i * maxLen);
                 }
                 IsScalar = false;
             }
