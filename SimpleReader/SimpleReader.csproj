@@ -43,6 +43,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="datafile.c3d" />
     <None Include="Sample.c3d" />
   </ItemGroup>
   <ItemGroup>

@@ -89,33 +89,37 @@ namespace SimpleWriter
                 qualityLabels[i] = labels[i] + "Quality";
             }
 
-            _writer.SetParameter<string[]>("POINT:LABELS", labels.Union<string>(angleLabels).ToArray<string>());//.Union<string>(qualityLabels).ToArray<string>());
+            _writer.SetParameter<string[]>("POINT:LABELS", labels.Union<string>(angleLabels).Union<string>(qualityLabels).ToArray<string>());
             _writer.SetParameter<Int16>("POINT:DATA_TYPE", 0);
+            _writer.SetParameter<Int16>("INFO:SCORE", 0);
             _writer.SetParameter<float>("ANALOG:RATE", 30);
-            _writer.PointsCount = (short)(((int)SkeletonMarkers.Count) + angleLabels.Length);//  + qualityLabels.Length);
+            _writer.PointsCount = (short)(((int)SkeletonMarkers.Count) + angleLabels.Length  + qualityLabels.Length);
             _currentData = new Vector3[_writer.PointsCount];
             _writer.Open("datafile.c3d");
 
             for (int i = 0; i < (int)SkeletonMarkers.Count - 1; i++)
             {
-                _currentData[i] = new Vector3(0, 0, 0);
+                _currentData[i] = new Vector3(1, 2, 3);
+            }
+
+            for (int i = 0; i < (int)SkeletonMarkers.Count - 1; i++)
+            {
+            
+                _currentData[i + (int)SkeletonMarkers.Count-1] = new Vector3(4, 5, 6);
             }
 
             for (int i = 0; i < (int)SkeletonMarkers.Count - 1; i++)
             {
 
-                _currentData[i + (int)SkeletonMarkers.Count-1] = new Vector3(0, 0, 0);
+                _currentData[i + 2 * (int)SkeletonMarkers.Count] = new Vector3(7, 8, 9);
             }
-
-            //for (int i = 0; i < (int)SkeletonMarkers.Count - 1; i++)
-            //{
-
-            //    _currentData[i + 2 * (int)SkeletonMarkers.Count] = new Vector3(0, 0, 0);
-            //}
             
             _writer.WriteIntFrame(_currentData);
-            
+            _writer.WriteIntFrame(_currentData);
+            _writer.WriteIntFrame(_currentData);
 
+            _writer.SetParameter<Int16>("INFO:SCORE", 42);
+            
 
 
             int pos = 0;

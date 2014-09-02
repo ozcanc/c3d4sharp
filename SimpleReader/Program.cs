@@ -18,13 +18,14 @@ namespace SimpleReader
             try
             {
                 C3dReader reader = new C3dReader();
+                
 
                 if (!reader.Open(args[0])) {
                     Console.Error.WriteLine("Error: Unable to open file " + args[0]);
                     return;
                 }
 
-                for (int i = 0; i < reader.GetParameter<Int16>("POINT:FRAMES"); i++)
+                for (int i = 0; i < /*reader.GetParameter<Int16>("POINT:FRAMES")*/ 100000; i++)
                 {
                     // returns an array of all points, it is necessary to call this method in each cycle
                     Vector3[] array = reader.ReadFrame();
@@ -33,15 +34,15 @@ namespace SimpleReader
                     Vector3 spine = array[1];
  
                     // get analog data for this frame
-                    float value = reader.AnalogData["Fx1", 0 /* from 0 to reader.AnalogChannels*/];
+                    //float value = reader.AnalogData["Fx1", 0 /* from 0 to reader.AnalogChannels*/];
                     // OR 
-                    value = reader.AnalogData[0, 0];
+                   // value = reader.AnalogData[0, 0];
                     
                     // OR
-                    float [,] analogData = reader.AnalogData.Data;
+                    //float [,] analogData = reader.AnalogData.Data;
 
 
-                    Console.WriteLine("Frame " + i + ": Spine.X " + spine.X + ",  Spine.Y " + spine.Y + ": Spine.Z " + spine.Z);
+                    //Console.WriteLine("Frame " + i + ": Spine.X " + spine.X + ",  Spine.Y " + spine.Y + ": Spine.Z " + spine.Z);
                 }
 
                 // Don't forget to close the reader
