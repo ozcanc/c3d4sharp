@@ -438,9 +438,8 @@ namespace Vub.Etro.IO
         public T GetData<T>(int i)
         {
             T ret;// = default(T);
-            //
+
             //  BASIC TYPES
-            //
             if (typeof(T) == typeof(char))
             {
                 ret = (T)(object)BitConverter.ToChar(_vectorData, i);
@@ -462,9 +461,7 @@ namespace Vub.Etro.IO
                 ret = (T)(object)DataToString();
             }
 
-            //
             // 1D Arrays
-            //
             else if (typeof(T) == typeof(string[]))
             {
                 ret = (T)(object)DataToStringArray();
@@ -556,10 +553,7 @@ namespace Vub.Etro.IO
 
         #endregion
 
-        public int Length
-        {
-            get { return _length; }
-        }
+        public int Length { get { return _length; } }
 
         private static Type GetType(sbyte c3dDataType)
         {
@@ -582,20 +576,13 @@ namespace Vub.Etro.IO
         {
             switch (c3dDataType)
             {
-                case -1:
-                    return 1;
-                case 1:
-                    return 1;
-                case 2:
-                    return 2;
-                case 4:
-                    return 4;
-                default:
-                    throw new ApplicationException("Unknown data type of c3d parameter");
+                case -1: return 1;
+                case 1:  return 1;
+                case 2:  return 2;
+                case 4:  return 4;
+                default: throw new ApplicationException("Unknown data type of c3d parameter");
             }
         }
     }
-
-
     #endregion Parameter
 }
